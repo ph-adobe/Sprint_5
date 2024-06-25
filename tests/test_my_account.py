@@ -1,68 +1,64 @@
 import pytest
-from tests.test_utils import *
-from tests.selectors import *
+
+from locators import Locators as L
+from selenium.webdriver.common.by import By
+from test_utils import TestUtils as tu, MAIN_PAGE_URL, FEED_PAGE_URL
 
 
-@pytest.mark.parametrize(
-    "path",
-    [
-        "https://stellarburgers.nomoreparties.site/",
-        "https://stellarburgers.nomoreparties.site/feed",
-    ],
-)
-def test_go_to_my_account_from_different_pages_logged_in(path, login_data):
-    login_email, login_password = login_data
-    if not logged_in():
-        log_in(login_email, login_password)
-    driver.get(path)
-    driver.find_element(By.XPATH, MY_ACCOUNT_BUTTON).click()
-    wait_for_loading(PROFILE_HEADER)
-    assert driver.find_element(By.XPATH, PROFILE_USER_EMAIL).get_attribute("value") == login_email
+class TestMyAccount:
 
+    @pytest.mark.parametrize(
+        "path",
+        [
+            MAIN_PAGE_URL,
+            FEED_PAGE_URL,
+        ],
+    )
+    def test_go_to_my_account_from_different_pages_logged_in(self, driver_scope_module, path, login_data):
+        login_email, login_password = login_data
+        tu.log_in(driver_scope_module, login_email, login_password)
+        driver_scope_module.get(path)
+        driver_scope_module.find_element(By.XPATH, L.MY_ACCOUNT_BUTTON).click()
+        tu.wait_for_loading(driver_scope_module, L.PROFILE_HEADER)
+        assert driver_scope_module.find_element(By.XPATH, L.PROFILE_USER_EMAIL)
+        tu.log_out(driver_scope_module)
 
-@pytest.mark.parametrize(
-    "path",
-    [
-        "https://stellarburgers.nomoreparties.site/",
-        "https://stellarburgers.nomoreparties.site/feed",
-    ],
-)
-def test_go_to_my_account_from_different_pages_not_logged_in(path):
-    if logged_in():
-        log_out()
-    driver.get(path)
-    driver.find_element(By.XPATH, MY_ACCOUNT_BUTTON).click()
-    assert driver.find_element(By.XPATH, ENTRY_HEADER)
+    @pytest.mark.parametrize(
+        "path",
+        [
+            MAIN_PAGE_URL,
+            FEED_PAGE_URL,
+        ],
+    )
+    def test_go_to_my_account_from_different_pages_not_logged_in(self, driver_scope_module, path):
+        driver_scope_module.get(path)
+        driver_scope_module.find_element(By.XPATH, L.MY_ACCOUNT_BUTTON).click()
+        assert driver_scope_module.find_element(By.XPATH, L.ENTRY_HEADER)
 
+    @pytest.mark.parametrize(
+        "xpath",
+        [
+            L.CONSTRUCTOR_BUTTON,
+            L.LOGO,
+        ],
+    )
+    def test_from_my_account_go_to_constructor_logged_in(self, driver_scope_module, xpath: str, login_data):
+        login_email, login_password = login_data
+        tu.log_in(driver_scope_module, login_email, login_password)
+        driver_scope_module.find_element(By.XPATH, L.MY_ACCOUNT_BUTTON).click()
+        tu.wait_for_loading(driver_scope_module, L.PROFILE_HEADER)
+        driver_scope_module.find_element(By.XPATH, xpath).click()
+        assert driver_scope_module.find_element(By.XPATH, L.MAKE_BURGER_HEADER)
+        tu.log_out(driver_scope_module)
 
-@pytest.mark.parametrize(
-    "css_selector",
-    [
-        CONSTRUCTOR_BUTTON,
-        LOGO,
-    ],
-)
-def test_from_my_account_go_to_constructor_logged_in(css_selector: str, login_data):
-    login_email, login_password = login_data
-    if not logged_in():
-        log_in(login_email, login_password)
-    driver.find_element(By.XPATH, MY_ACCOUNT_BUTTON).click()
-    wait_for_loading(PROFILE_HEADER)
-    driver.find_element(By.CSS_SELECTOR, css_selector).click()
-    assert driver.find_element(By.XPATH, MAKE_BURGER_HEADER)
-
-
-@pytest.mark.parametrize(
-    "css_selector",
-    [
-        CONSTRUCTOR_BUTTON,
-        LOGO,
-    ],
-)
-def test_from_my_account_go_to_constructor_not_logged_in(css_selector: str):
-    if logged_in():
-        log_out()
-    driver.get("https://stellarburgers.nomoreparties.site/")
-    driver.find_element(By.XPATH, MY_ACCOUNT_BUTTON).click()
-    driver.find_element(By.CSS_SELECTOR, css_selector).click()
-    assert driver.find_element(By.XPATH, MAKE_BURGER_HEADER)
+    @pytest.mark.parametrize(
+        "xpath",
+        [
+            L.CONSTRUCTOR_BUTTON,
+            L.LOGO,
+        ],
+    )
+    def test_from_my_account_go_to_constructor_not_logged_in(self, driver_scope_module, xpath: str):
+        driver_scope_module.find_element(By.XPATH, L.MY_ACCOUNT_BUTTON).click()
+        driver_scope_module.find_element(By.XPATH, xpath).click()
+        assert driver_scope_module.find_element(By.XPATH, L.MAKE_BURGER_HEADER)
